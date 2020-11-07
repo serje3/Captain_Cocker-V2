@@ -12,6 +12,20 @@ ffmpeg_opts = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn'}
 
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
+
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -21,10 +35,10 @@ class Music(commands.Cog):
     async def play(self, ctx, *, url):
 
         try:
-            video = new(url)
+            video = new(url,ydl_opts=ytdl_format_options)
         except ValueError:
             video_id = search_youtube(url.split(' '))[0]['id']
-            video = new(video_id)
+            video = new(video_id,ydl_opts=ytdl_format_options)
 
         async with ctx.typing():
             audio = video.getbestaudio().url
@@ -49,7 +63,7 @@ class Music(commands.Cog):
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
-                await ctx.send("Не присоединено к голосовому чату.")
+                await ctx.send("Вы не присоединены к голосовому чату.")
                 raise commands.CommandError("Пользователь не присоединён к голосовому чату.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
