@@ -51,6 +51,18 @@ class Music(commands.Cog):
         await change_role_bot(player_title, self.bot, ctx, 'play')
 
     @commands.command()
+    async def volume(self, ctx, volume: int):
+        """Changes the player's volume"""
+
+        if ctx.voice_client is None:
+            return await ctx.send("Не присоединено к голосовому чату")
+
+        ctx.voice_client.source.volume = volume / 100
+
+        await ctx.send("Громкость: {}%".format(volume))
+
+
+    @commands.command()
     async def stop(self, ctx):
         await ctx.voice_client.disconnect()
         await change_role_bot('Музыка', self.bot, ctx, 'stop')
