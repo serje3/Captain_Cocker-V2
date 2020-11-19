@@ -44,9 +44,9 @@ class Music(commands.Cog):
             audio = video.getbestaudio().url
             ctx.voice_client.play(discord.FFmpegPCMAudio(audio, **ffmpeg_opts))
             ctx.voice_client.is_playing()
+
         player_title = video.title
         await ctx.send('Сейчас играет: ' + player_title)
-
         # change color and name
         await change_role_bot(player_title, self.bot, ctx, 'play')
 
@@ -62,12 +62,51 @@ class Music(commands.Cog):
         await ctx.send("Громкость: {}%".format(volume))
 
 
+
+
+    @commands.command()
+    async def golosovanie(self, ctx):
+        await self.play(ctx, url="https://www.youtube.com/watch?v=dhhTNEJbEQ4")
+        time_code = [4,4.1,3.9,4,4,4,2.9,10.6,4,8,8,8,8,8,8]
+        gif_urls = ["https://tenor.com/view/flick-esfand-esfandtv-ricardo-milos-ricardo-flick-gif-13730968",
+                    "https://tenor.com/view/ponasenkov-%d0%bf%d0%be%d0%bd%d0%b0%d1%81%d0%b5%d0%bd%d0%ba%d0%be%d0%b2-%d1%82%d0%b0%d0%bd%d0%b5%d1%86-%d0%bc%d0%b0%d1%8d%d1%81%d1%82%d1%80%d0%be-dance-gif-15552318",
+                    "https://tenor.com/view/gachi-gachimuchi-karate-gif-13510787",
+                    "https://tenor.com/view/senjougahara-monogatari-series-anime-gif-gif-15534766",
+                    "https://tenor.com/view/gabkini-twitchitalia-gif-14901405",
+                    "https://tenor.com/view/im-gaxi-gaxi-the-real-im-gaxi-ethan-tremblay-ethan-gif-14071428",
+                    "https://tenor.com/view/pepega-pls-xqc-dance-pepega-dance-pepe-pls-pepega-gif-16147647",
+                    "https://tenor.com/view/gachi-gachi-hyper-gif-15959866",
+                    "https://tenor.com/view/gachiw-gachi-gachibass-billy-herrington-gif-16079041",
+                    "https://tenor.com/view/%d0%bf%d0%be%d0%bd%d0%b0%d1%81%d0%b5%d0%bd%d0%ba%d0%be%d0%b2-%d1%82%d0%b0%d0%bd%d0%b5%d1%86-%d0%b3%d0%b5%d0%bd%d0%b8%d0%b9-%d0%bc%d0%b0%d1%8d%d1%81%d1%82%d1%80%d0%be-punch-gif-15552297",
+                    "https://tenor.com/bdp13.gif",
+                    "https://tenor.com/view/ricardo-flick-dance-weekend-vibe-gif-13753340",
+                    "https://tenor.com/view/gachi-gachimuchi-flex-lets-do-this-gif-16644616",
+                    "https://tenor.com/view/knut-hips-shake-gachi-sexy-gif-15908380",
+                    "https://media.discordapp.net/attachments/675762801049862206/715649594641350776/5yaH2Fl.gif",
+                    "https://tenor.com/view/gachi-ricardo-milos-dance-gif-13294294",
+                    ]
+        for i in range(len(gif_urls)):
+            await ctx.send(gif_urls[i])
+            await asyncio.sleep(time_code[i])
+
+    @commands.command()
+    async def volume(self, ctx, volume: int):
+        """Changes the player's volume"""
+
+        if ctx.voice_client is None:
+            return await ctx.send("Не присоединено к голосовому чату")
+
+        ctx.voice_client.source.volume = volume / 100
+
+        await ctx.send("Громкость: {}%".format(volume))
+
     @commands.command()
     async def stop(self, ctx):
         await ctx.voice_client.disconnect()
         await change_role_bot('Музыка', self.bot, ctx, 'stop')
 
     @staticmethod
+    @golosovanie.before_invoke
     @play.before_invoke
     @stop.before_invoke
     async def ensure_voice(self,ctx):
@@ -211,4 +250,5 @@ class Main(commands.Bot):
         await add_role_to_bot(guild, discord.utils.get(guild.roles, name='Музыка'))
 
     def run_bot(self):
+
         self.run(self.token)
