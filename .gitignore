@@ -5,3 +5,5 @@ start.bat
 test.py
 *.db
 *.webm
+.fuse_hidden*
+start.sh
