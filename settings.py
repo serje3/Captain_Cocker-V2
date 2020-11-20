@@ -1,3 +1,0 @@
-TOKEN = 'NzE2MDQxNjY5Mzg0MDc3MzQz.XtF_xQ.FKxIzTyXoRtW8Cw0oVNjYl2Ez08'
-
-AUTHKEY= '0324912)(*%%26*(&$*(*$^&$^&(^&%dsdEWFee2342efsafs3v$-09569-4068596'
