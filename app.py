@@ -43,7 +43,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def play(self, ctx, *, url):
-
+        print(url)
         try:
             video = new(url,ydl_opts=ytdl_format_options)
         except ValueError:
@@ -59,6 +59,7 @@ class Music(commands.Cog):
         await ctx.send('Сейчас играет: ' + player_title)
         # change color and name
         await change_role_bot(player_title, self.bot, ctx, 'play')
+        return player_title
 
     @commands.command()
     async def volume(self, ctx, volume: int):
@@ -76,7 +77,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def golosovanie(self, ctx):
-        await self.play(ctx, url="https://www.youtube.com/watch?v=dhhTNEJbEQ4")
+        await self.play(self,ctx, url="https://www.youtube.com/watch?v=dhhTNEJbEQ4")
         time_code = [4,4.1,3.9,4,4,4,2.9,10.6,4,8,8,8,8,8,8]
         gif_urls = ["https://tenor.com/view/flick-esfand-esfandtv-ricardo-milos-ricardo-flick-gif-13730968",
                     "https://tenor.com/view/ponasenkov-%d0%bf%d0%be%d0%bd%d0%b0%d1%81%d0%b5%d0%bd%d0%ba%d0%be%d0%b2-%d1%82%d0%b0%d0%bd%d0%b5%d1%86-%d0%bc%d0%b0%d1%8d%d1%81%d1%82%d1%80%d0%be-dance-gif-15552318",
@@ -140,13 +141,16 @@ class SongList(commands.Cog):
     @commands.command()
     async def showList(self, ctx):
         List = self.database.select(ctx.guild.id)
+        msg = []
+        result = []
         if List:
             await ctx.send('id\tНазвание')
-            msg = []
+            msg.append('id\tНазвание')
             for song in List:
                 msg.append(str(song[0]) + '   ' + song[1] + '\n')
 
-            lenList = [len(value) for value in ['hello', ' world']]
+            lenList = [len(value) for value in msg]
+            result = msg
             if sum(lenList) <= 2000:
                 await ctx.send("".join(msg))
             else:
@@ -161,9 +165,11 @@ class SongList(commands.Cog):
                         continue
                     await ctx.send("".join(msg[:i]))
                     del msg[:i]
+
         else:
             await ctx.send('Не найдено')
-
+            result = ['Не найдено',]
+        return '\n'.join(result)
     @commands.command()
     async def playlist(self, ctx, _id=1):
         song_list = self.database.select(ctx.guild.id)
