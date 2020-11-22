@@ -7,4 +7,3 @@ test.py
 *.webm
 .fuse_hidden*
 start.sh
-settings.py

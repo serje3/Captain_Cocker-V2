@@ -122,7 +122,7 @@ class VkBot(commands.Cog):
         app.router.add_post('/event', command)
         runner = web.AppRunner(app)
         await runner.setup()
-        self.site = web.TCPSite(runner, '0.0.0.0', 8999)
+        self.site = web.TCPSite(runner, settings.URL, settings.PORT)
         await self.bot.wait_until_ready()
         await self.site.start()
 

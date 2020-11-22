@@ -60,6 +60,7 @@ class ManageDB:
     def close_connection(self):
         self.conn.close()
 
+# tests
 # cursor = ManageDB()
 # cursor.insert([('song',623452),('song2',623452),('song3',623452)])
 # print(cursor.select(623452))

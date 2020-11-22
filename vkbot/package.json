@@ -1,0 +1,22 @@
+{
+  "name": "cocker-vk-bot-js",
+  "version": "0.8.0",
+  "description": "integrates with discord bot",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": "git+https://github.com/serje3/Captain_Cocker-V2",
+  "author": "Sergey Erin <serjerin322@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/serje3/Captain_Cocker-V2/issues"
+  },
+  "homepage": "https://github.com/serje3/Captain_Cocker-V2#readme",
+  "dependencies": {
+    "@vk-io/hear": "^1.0.2",
+    "node-fetch": "^2.6.1",
+    "vk-io": "^4.0.4",
+    "yarn": "^1.22.10"
+  }
+}
