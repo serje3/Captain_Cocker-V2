@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app.js"
   },
-  "repository": "git+https://github.com/serje3/Captain_Cocker-V2",
+  "repository": "git+https://github.com/serje3/Captain_Cocker-V2/tree/master/vkbot",
   "author": "Sergey Erin <serjerin322@gmail.com>",
   "license": "ISC",
   "bugs": {
