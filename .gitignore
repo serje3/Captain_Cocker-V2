@@ -7,3 +7,4 @@ test.py
 *.webm
 .fuse_hidden*
 start.sh
+vkbot/node_modules 
