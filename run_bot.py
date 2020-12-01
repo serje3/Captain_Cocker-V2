@@ -7,6 +7,8 @@ from dataQueries import ManageDB
 from aiohttp import web
 import json
 
+
+
 bot = Main("!", settings.TOKEN)
 bot.insert_cogs(Music(bot))
 bot.insert_cogs(SongList(bot))
@@ -66,7 +68,7 @@ class VkBot(commands.Cog):
                 await self.songlist.playlist(self, self.ctx)
                 return "Играет плейлист"
             elif (len(args) >= 1):
-                await self.songlist.playlist(self, self.ctx, _id=args[1])
+                await self.songlist.playlist(self, self.ctx, _id=int(args[1]))
         elif command == 'next':
             await self.songlist.next(self, self.ctx)
         elif command == 'add':

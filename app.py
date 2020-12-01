@@ -144,8 +144,8 @@ class SongList(commands.Cog):
         msg = []
         result = []
         if List:
-            await ctx.send('id\tНазвание')
-            msg.append('id\tНазвание')
+
+            msg.append('id\tНазвание\n')
             for song in List:
                 msg.append(str(song[0]) + '   ' + song[1] + '\n')
 
