@@ -125,6 +125,7 @@ class VkBot(commands.Cog):
         runner = web.AppRunner(app)
         await runner.setup()
         self.site = web.TCPSite(runner, settings.URL, settings.PORT)
+        print('running web server on PORT --------- '+settings.PORT)
         await self.bot.wait_until_ready()
         await self.site.start()
 

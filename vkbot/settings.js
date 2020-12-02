@@ -5,7 +5,7 @@ module.exports.settings = {
     API_MODE: "parallel",
 
     //fetch()
-    URL:'http://0.0.0.0:'+process.env.PORT+'/',
+    URL:'https://captain-cocker.herokuapp.com/',
     AUTHKEY: process.env.AUTHKEY
 
 }
