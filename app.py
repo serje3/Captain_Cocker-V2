@@ -247,7 +247,7 @@ class Main(commands.Bot):
             self.add_cog(cog)
 
     async def on_ready(self):
-        print('Logged on as', self.user)
+        print('[Python][Discord]Logged on as', self.user)
         print('-------------')
 
     async def on_guild_join(self, guild):

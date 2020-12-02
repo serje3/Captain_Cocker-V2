@@ -20,14 +20,16 @@ vk.updates.use(async (msg,next)=>{
         console.log(msg.senderId)
 
         if (msg.text.trim()==='!nigger'){
-            msg.kickUser(msg.senderId)
+            vk.api.messages.removeChatUser({
+                chat_id: msg.peerId,
+                user_id: msg.senderId,
+            });
         }
-
-
-	    msg.text.trim()[0]==='!'?toDiscord.handleMessage(msg.text.trim()).then((value)=>{
-            msg.send(value)
-        }).catch(e=>console.log(e)):null;
-	
+        else {
+            msg.text.trim()[0] === '!' ? toDiscord.handleMessage(msg.text.trim()).then((value) => {
+                msg.send(value)
+            }).catch(e => console.log(e)) : null;
+        }
     }
     
     next();
@@ -40,3 +42,5 @@ vk.updates.use(async (msg,next)=>{
 
 
 vk.updates.start().catch(console.error);
+console.log('[NodeJS][VK] - Logged on as Captain Cocker');
+console.log('-------------');
