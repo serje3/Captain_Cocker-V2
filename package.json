@@ -2,9 +2,9 @@
   "name": "cocker-vk-bot-js",
   "version": "0.8.0",
   "description": "integrates with discord bot",
-  "main": "app.js",
+  "main": "vkbot/app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node vkbot/app.js"
   },
   "repository": "git+https://github.com/serje3/Captain_Cocker-V2/tree/master/vkbot",
   "author": "Sergey Erin <serjerin322@gmail.com>",
