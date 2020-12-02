@@ -11,13 +11,15 @@ const vk = new VK({
 vk.updates.use(async (msg,next)=>{
     if(msg.senderType !== 'user') return false;
     if(msg.peerType !== 'chat'){
-        msg.send("Я работаю только в беседе. Добавь меня в")
+        msg.send("Я работаю только в беседе(Или не работаю вообще). Добавь меня в беседу")
         return false
     }
     if (msg.text !== undefined) {
-        msg.text.trim()[0]==='!'?toDiscord.handleMessage(msg.text.trim()).then((value)=>{
+        console.log(msg.text);
+	msg.text.trim()[0]==='!'?toDiscord.handleMessage(msg.text.trim()).then((value)=>{
             msg.send(value)
         }).catch(e=>console.log(e)):null;
+	
     }
     
     next();
