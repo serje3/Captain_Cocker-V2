@@ -66,9 +66,9 @@ class VkBot(commands.Cog):
         elif command == 'playlist':
             if (len(args) == 1):
                 await self.songlist.playlist(self, self.ctx)
-                return "Играет плейлист"
             elif (len(args) >= 1):
                 await self.songlist.playlist(self, self.ctx, _id=int(args[1]))
+            return "Играет плейлист"
         elif command == 'next':
             await self.songlist.next(self, self.ctx)
         elif command == 'add':

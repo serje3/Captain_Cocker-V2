@@ -2,6 +2,7 @@ const {settings} = require('./settings')
 const { VK, Keyboard } = require('vk-io')
 const { HearManager } = require('@vk-io/hear')
 let chats = require('./chats.json')
+const fs = require('fs')
 const botDiscord = require('./botDiscordData')
 const toDiscord = new botDiscord() 
 const vk = new VK({
@@ -10,10 +11,7 @@ const vk = new VK({
     apiMode: settings.API_MODE
 })
 
-// setInterval(async () => {
-// 	console.log(chats)
-//     await fs.writeFileSync('./chats.json', JSON.stringify(chats,null,'\t'))
-// }, 1000)
+
 
 const hearManager = new HearManager();
 
@@ -35,7 +33,7 @@ const hearCommand = (name, conditions, handle) => {
 		handle = conditions;
 		conditions = [`/${name}`];
 	}
-
+	console.log(name,conditions,handle)
 	if (!Array.isArray(conditions)) {
 		conditions = [conditions];
 	}
@@ -51,10 +49,7 @@ const hearCommand = (name, conditions, handle) => {
 	);
 };
 
-async function saveChats(){
-	require('fs').writeFileSync(`./chats.json`, JSON.stringify(chats,null,'\t'))
-	return true;
-}
+
 
 
 vk.updates.use(async (msg,next)=>{
@@ -68,15 +63,15 @@ vk.updates.use(async (msg,next)=>{
         // console.log(msg);
         // console.log(msg.senderId)
 		const chat = chats.filter(item => item.chatId === msg.chatId)[0]
-		console.log('работает?',chats)
     	if (!chat){
 
-        chats.push({
-            chatId:msg.chatId,
-            channel: -1
-        })
-			console.log('ну и', chats)
-			saveChats()
+			chats.push({
+				chatId:msg.chatId,
+				channel: null,
+				inchannel: false,
+			})
+			fs.writeFileSync('vkbot/chats.json', JSON.stringify(chats,null,'\t'))
+			console.log(chats)
     	}
 
         if (msg.text.trim().startsWith('!nigger')){
@@ -112,7 +107,7 @@ hearCommand('help', async (context) => {
 	await context.send({
 		message: `
 			Список команд
-			/setChannel - установить главный канал
+			/setchannel - установить главный канал
 			!join - присоединиться к голосовому чату в дискорде
 			!playlist - Включить плейлист в голосовом чате в дискорде
 			!showList - Показать список песен
@@ -151,12 +146,92 @@ hearCommand('help', async (context) => {
 	});
 });
 
+hearCommand('setchannel', ['setchannel',/\/setchannel ([a-z]|[а-я])+/g],async (msg)=>{
+	// msg.text.trim().slice()
+	console.log(msg.text)
+	console.log(1,msg.text.trim().slice(12))
+	console.log(2, msg.text.trim().slice(11))
+
+	chats = chats.map(item =>{
+		if(item.chatId === msg.chatId) {
+			item.channel = msg.text.trim().slice(12).trim()
+		}
+		return item
+		})
+	fs.writeFileSync('vkbot/chats.json', JSON.stringify(chats,null,'\t'))
+
+})
 
 hearCommand('join', async (msg)=>{
-    toDiscord.handleMessage('!join bruh').then((value) => {
-                msg.send(value)
-            }).catch(e => console.log(e))
+	const chat = chats.filter(item => item.chatId === msg.chatId)[0]
+	if (chat.channel === null){
+		msg.send("Основной голосовой канал не указан, для этого /setchannel название канала")
+	}
+	else {
+		toDiscord.handleMessage('!join ' + chat.channel).then((value) => {
+			msg.send(value)
+			chats = chats.map(item =>{
+				if(item.chatId === msg.chatId) {
+					item.inchannel = true
+				}
+				return item
+			})
+			fs.writeFileSync('vkbot/chats.json', JSON.stringify(chats,null,'\t'))
+		}).catch(e => console.log(e))
+	}
+	})
+
+
+
+
+hearCommand('playlist', async (msg)=>{
+
+	const chat = chats.filter(item => item.chatId === msg.chatId)[0]
+
+	if (chat.inchannel===false && chat.channel !== null){
+		msg.send("Голосовой канал не определен, подключаюсь к основному")
+
+		toDiscord.handleMessage('!join ' + chat.channel).then((value) => {
+			msg.send(value)
+			chats = chats.map(item =>{
+				if(item.chatId === msg.chatId) {
+					item.inchannel = true
+				}
+				return item
+			})
+			fs.writeFileSync('vkbot/chats.json', JSON.stringify(chats,null,'\t'))
+
+
+		}).then( value =>
+			toDiscord.handleMessage('!playlist').then((value1) => {
+				msg.send(value1)
+			}).catch(e => console.log(e))
+		).catch(e => console.log(e))
+		msg.send("Играет плейлист")
+	} else if(chat.inchannel===false){
+		msg.send("Нет подключения к голосовому чату")
+	} else{
+		toDiscord.handleMessage('!playlist').then((value) => {
+			msg.send(value)
+		}).catch(e => console.log(e))
+	}
+
+
 })
+
+hearCommand('stop', async (msg)=>[
+	toDiscord.handleMessage('!stop ').then((value) => {
+		msg.send(value)
+
+		chats = chats.map(item =>{
+			if(item.chatId === msg.chatId) {
+				item.inchannel = false
+			}
+			return item
+		})
+		fs.writeFileSync('vkbot/chats.json', JSON.stringify(chats,null,'\t'))
+	}).catch(e => console.log(e))
+])
 
 hearCommand('nigger', async (context) =>{
     vk.api.messages.removeChatUser({
