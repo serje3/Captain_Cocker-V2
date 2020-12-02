@@ -64,7 +64,7 @@ class botDiscord{
                 body: JSON.stringify(command),
                 headers: {
                     'Content-Type':'application/json',
-                    'Accept': '*/*',
+                    'Accept': 'application/json',
                     'Accept-Encoding':'gzip, deflate, br'
                 }
             })
@@ -72,7 +72,7 @@ class botDiscord{
             const json = await response.json()
         
         //console.log(json);
-        if (json.status=='failed') { 
+        if (json.status==='failed') {
             return `Ошибка: ${json.message}`
         }
         else {
