@@ -5,7 +5,7 @@ module.exports.settings = {
     API_MODE: "parallel",
 
     //fetch()
-    URL:'https://0.0.0.0'+process.env.PORT+'/',
+    URL:'https://0.0.0.0:'+process.env.PORT+'/',
     AUTHKEY: process.env.AUTHKEY
 
 }
