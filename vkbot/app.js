@@ -14,9 +14,17 @@ vk.updates.use(async (msg,next)=>{
         msg.send("Я работаю только в беседе(Или не работаю вообще). Добавь меня в беседу")
         return false
     }
+
     if (msg.text !== undefined) {
-        console.log(msg.text);
-	msg.text.trim()[0]==='!'?toDiscord.handleMessage(msg.text.trim()).then((value)=>{
+        console.log(msg);
+        console.log(msg.senderId)
+
+        if (msg.text.trim()==='!nigger'){
+            msg.kickUser(msg.senderId)
+        }
+
+
+	    msg.text.trim()[0]==='!'?toDiscord.handleMessage(msg.text.trim()).then((value)=>{
             msg.send(value)
         }).catch(e=>console.log(e)):null;
 	

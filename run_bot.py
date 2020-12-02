@@ -103,7 +103,6 @@ class VkBot(commands.Cog):
 
         async def command(request):
             try:
-                print(0, request.query['authkey'], settings.AUTHKEY,request.query['authkey']==settings.AUTHKEY)
                 if (request.query['authkey'] == settings.AUTHKEY):
                     print(1, 'ok')
                     content = await request.json()
