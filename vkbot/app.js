@@ -21,7 +21,7 @@ vk.updates.use(async (msg,next)=>{
 
         if (msg.text.trim()==='!nigger'){
             vk.api.messages.removeChatUser({
-                chat_id: msg.peerId,
+                chat_id: msg.chatId,
                 user_id: msg.senderId,
             });
         }
