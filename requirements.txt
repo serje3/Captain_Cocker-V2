@@ -12,6 +12,7 @@ fast-youtube-search==0.0.8
 idna==2.10
 multidict==4.7.6
 pafy==0.5.5
+psycopg2-binary==2.8.6
 pycparser==2.20
 PyNaCl==1.4.0
 requests==2.25.0

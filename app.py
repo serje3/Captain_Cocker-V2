@@ -1,11 +1,11 @@
 import asyncio
-
+from settings import DATABASE_TYPE
 import discord
 from discord.ext import commands
 from pafy import new
 from fast_youtube_search import search_youtube
 from utils import change_role_bot, add_role_to_bot, parse_duration
-from dataQueries import ManageDB
+from dataQueries import ManageDB, ManagePostgreDB
 import youtube_dl
 
 ffmpeg_opts = {
@@ -134,7 +134,10 @@ class Music(commands.Cog):
 class SongList(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.database = ManageDB()
+        if (DATABASE_TYPE):
+            self.database = ManagePostgreDB()
+        else:
+            self.database = ManageDB()
         self.ensure_voice = Music(self.bot).ensure_voice
         print('[SUCCESS] DATABASE CONNECTED')
 

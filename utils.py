@@ -1,6 +1,12 @@
 import discord
 from discord.ext.commands.errors import MissingPermissions
 
+
+databases = {
+    'postgres':1,
+    'sqlite':0
+}
+
 def get_bot(bot, ctx):
     return bot.get_guild(ctx.message.guild.id).get_member(716041669384077343)
 

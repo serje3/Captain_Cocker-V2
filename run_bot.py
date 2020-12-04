@@ -3,7 +3,7 @@ import settings
 import discord
 from discord.ext import commands
 from app import Main, Music, SongList
-from dataQueries import ManageDB
+from dataQueries import ManageDB, ManagePostgreDB
 from aiohttp import web
 import json
 
@@ -19,7 +19,10 @@ class VkBot(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.ctx = None
-        self.database = ManageDB()
+        if settings.DATABASE_TYPE:
+            self.database = ManagePostgreDB()
+        else:
+            self.database = ManageDB()
         self.music = Music(bot)
         self.music2 = Music(self.bot)
         self.play = self.music2.play
@@ -80,7 +83,7 @@ class VkBot(commands.Cog):
                 await self.songlist.drop(self, self.ctx, ['all'])
                 return "Удалено всё"
             elif len(args) > 1:
-                await self.songlist.drop(self, self.ctx, args[1:])
+                await self.songlist.drop(self, self.ctx, *args[1:])
                 return f"Удалены {', '.join(args[1:])}"
 
     async def fetch_context(self):

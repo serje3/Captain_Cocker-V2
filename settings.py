@@ -1,7 +1,24 @@
 import os
 
-TOKEN = os.environ.get('TOKEN') #discord bot token
+from utils import databases
 
-AUTHKEY = os.environ.get('AUTHKEY')#", " " etc., should equal AUTHKEY in settings.js"
+
+TOKEN=os.environ.get('TOKEN')
+AUTHKEY = os.environ.get('AUTHKEY')
 URL = os.environ.get('URL')
-PORT = os.environ.get('PORT') #int
+PORT = os.environ.get('PORT')
+
+
+DATABASE_TYPE = databases['postgres']
+DATABASE_CONF = os.environ.get('POSTGRESQL_CONF')
+
+
+
+
+
+
+
+
+
+
+
