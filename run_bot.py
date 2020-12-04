@@ -76,7 +76,7 @@ class VkBot(commands.Cog):
             await self.songlist.next(self, self.ctx)
         elif command == 'add':
             print(args[1:])
-            await self.songlist.add(self, self.ctx, args[1:])
+            await self.songlist.add(self, self.ctx, *args[1:])
             return "Аудиозаписи добавлены в базу"
         elif command == 'drop':
             if args[1] == 'all':
