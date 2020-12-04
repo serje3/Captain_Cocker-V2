@@ -254,7 +254,7 @@ class Main(commands.Bot):
         print('-------------')
 
     async def on_guild_join(self, guild):
-        await guild.system_channel.send("Приветствую! Он\n Для информации напиши !info")
+        await guild.system_channel.send("Приветствую!\n Для информации напиши !info")
         await guild.system_channel.send("https://tenor.com/bhyep.gif")
 
         if discord.utils.get(guild.roles, name='Музыка') == None:
