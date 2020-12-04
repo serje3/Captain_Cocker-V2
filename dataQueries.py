@@ -138,8 +138,8 @@ class ManagePostgreDB():
 
     def set_now_playing(self, song_id, guild_id):
         cursor = self.conn.cursor()
-        result = cursor.execute("""SELECT * FROM now_song WHERE guild=%(guild)s""", {"guild": guild_id})
-        fetch = result.fetchall()
+        cursor.execute("""SELECT * FROM now_song WHERE guild=%(guild)s""", {"guild": guild_id})
+        fetch = cursor.fetchall()
         if len(fetch) == 0:
             cursor.execute("""INSERT INTO now_song(id,guild) VALUES (%s,%s)""", (song_id, guild_id))
         else:
