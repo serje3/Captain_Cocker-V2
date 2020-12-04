@@ -139,7 +139,6 @@ class SongList(commands.Cog):
         else:
             self.database = ManageDB()
         self.ensure_voice = Music(self.bot).ensure_voice
-        print('[SUCCESS] DATABASE CONNECTED')
 
     @commands.command()
     async def showList(self, ctx):
@@ -219,6 +218,7 @@ class SongList(commands.Cog):
         if text != "":
             songsList.append(text.replace(',', ''))
         list = [(song, guild) for song in songsList]
+        print(list)
         self.database.insert(list)
         await ctx.send(f"Сохранены: {', '.join(songsList)}"[:2000])
 

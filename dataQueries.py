@@ -11,7 +11,7 @@ class ManageDB:
     def __init__(self):
 
         self.conn = sqlite3.connect('songsList.db')
-
+        print('[SQLITE3] DATABASE CONNECTED')
         cursor = self.conn.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS songs(
                            id INTEGER NOT NULL ,
@@ -92,17 +92,19 @@ class ManagePostgreDB():
                                      user=data.username,
                                      password=data.password,
                                      host=data.hostname, )
+        print('[POSTGRESQL] DATABASE CONNECTED')
+
         cursor = self.conn.cursor()
 
         cursor.execute("""CREATE TABLE IF NOT EXISTS songs(
                                    id INTEGER NOT NULL ,
                                    song text NOT NULL,
-                                   guild INTEGER NOT NULL
+                                   guild BIGINT NOT NULL
                 );""")
         self.conn.commit()
         cursor.execute("""CREATE TABLE IF NOT EXISTS now_song(
                                            id INTEGER NOT NULL,
-                                           guild INTEGER PRIMARY KEY NOT NULL
+                                           guild BIGINT PRIMARY KEY NOT NULL
                         );""")
         self.conn.commit()
         cursor.close()
