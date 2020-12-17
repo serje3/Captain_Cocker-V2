@@ -7,9 +7,9 @@ from dataQueries import ManageDB, ManagePostgreDB
 from aiohttp import web
 import json
 
+intents = discord.Intents.all()
 
-
-bot = Main("!", settings.TOKEN)
+bot = Main("!", settings.TOKEN, intents)
 bot.insert_cogs(Music(bot))
 bot.insert_cogs(SongList(bot))
 

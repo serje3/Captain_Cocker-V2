@@ -62,6 +62,20 @@ class Music(commands.Cog):
         return player_title
 
     @commands.command()
+    async def spotify(self,ctx):
+        spotify_song = discord.utils.get(ctx.author.activities,name='Spotify')
+        if spotify_song is not None:
+            await self.play(ctx=ctx,url=f"{spotify_song.title} - {spotify_song.artist}")
+        else:
+            await ctx.send("Вы ничего не слушаете в Spotify\n(Или нет интерграции Discord с Spotify)")
+
+
+
+    # @commands.Cog.listener(name='on_member_update')
+    # async def update_member(self,before,after):
+    #     print('yes')
+
+    @commands.command()
     async def volume(self, ctx, volume: int):
         """Changes the player's volume"""
 
@@ -117,6 +131,7 @@ class Music(commands.Cog):
         await change_role_bot('Музыка', self.bot, ctx, 'stop')
 
     @staticmethod
+    @spotify.before_invoke
     @golosovanie.before_invoke
     @play.before_invoke
     @stop.before_invoke
@@ -241,9 +256,10 @@ class SongList(commands.Cog):
 
 
 class Main(commands.Bot):
-    def __init__(self, command_prefix, token):
-        super().__init__(command_prefix=command_prefix)
+    def __init__(self, command_prefix, token,intents):
+        super().__init__(command_prefix=command_prefix, intents=intents)
         self.token = token
+
 
     def insert_cogs(self, *cogs):
         for cog in cogs:
@@ -252,6 +268,9 @@ class Main(commands.Bot):
     async def on_ready(self):
         print('[Python][Discord]Logged on as', self.user)
         print('-------------')
+
+
+
 
     async def on_guild_join(self, guild):
         await guild.system_channel.send("Приветствую!\n Для информации напиши !info")
