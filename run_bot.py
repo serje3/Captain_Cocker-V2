@@ -9,7 +9,7 @@ import json
 
 intents = discord.Intents.all()
 
-bot = Main("!", settings.TOKEN, intents)
+bot = Main("/", settings.TOKEN, intents)
 bot.insert_cogs(Music(bot))
 bot.insert_cogs(SongList(bot))
 

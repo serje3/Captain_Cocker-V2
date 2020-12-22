@@ -8,3 +8,4 @@ test.py
 .fuse_hidden*
 start.sh
 node_modules
+slashCommands.js
