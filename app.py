@@ -180,7 +180,7 @@ class SongList(commands.Cog):
     @commands.command()
     async def playlist(self, ctx, _id=1):
         song_list = self.database.select(ctx.guild.id)
-        await ctx.send(embed=discord.Embed(title='Играет плейлист',colour=discord.Colour.red(),description=f"Плейлист из {len(song_list)} треков"))
+        await ctx.send(embed=discord.Embed(title='Играет плейлист',color=0x00ffbf,description=f"Плейлист из {len(song_list)} треков"))
         for id, song, guild in song_list:
             if id < _id:
                 continue
@@ -198,7 +198,7 @@ class SongList(commands.Cog):
                 ctx.voice_client.is_playing()
 
             await change_role_bot(video.title, self.bot, ctx, type='play', playlist=True, playlist_id=id)
-            await ctx.send(embed=discord.Embed(title=video.title,description=f"Плейлист ID {id}",colour=discord.Colour.dark_red()).set_image(url=video.bigthumbhd))
+            await ctx.send(embed=discord.Embed(title=video.title,description=f"Плейлист ID {id}",color=0x94ffe4).set_image(url=video.bigthumbhd))
             await asyncio.sleep(parse_duration(video.duration))
 
 
