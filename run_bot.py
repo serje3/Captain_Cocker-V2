@@ -1,7 +1,5 @@
 import asyncio
 
-from discord_interactions import verify_key
-
 import settings
 import discord
 from discord.ext import commands
@@ -117,12 +115,7 @@ class VkBot(commands.Cog):
 
         async def command(request):
             try:
-                signature = request.headers["X-Signature-Ed25519"]
-                timestamp = request.headers["X-Signature-Timestamp"]
-                if verify_key(request.data, signature, timestamp, settings.PUBLIC_ID):
-                    print('Signature is valid')
-                else:
-                    print('Signature is invalid')
+
                 if (request.query['authkey'] == settings.AUTHKEY):
                     print(1, 'ok')
                     content = await request.json()
