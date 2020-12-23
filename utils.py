@@ -33,9 +33,11 @@ async def change_role_bot(player_title,bot, ctx, type,playlist=False, playlist_i
             if playlist:
                 await Bot.roles[1].edit(name=f"Плейлист ID {playlist_id}", color=color, hoist=hoist)
                 return
-            await Bot.roles[1].edit(name=player_title,
+            await Bot.roles[1].edit(
+                          name=player_title,
                           color=color,
-                          hoist=hoist)
+                          hoist=hoist,
+                          permissions=discord.Permissions.manage_roles)
         except MissingPermissions:
             return
 

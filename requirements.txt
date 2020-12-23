@@ -6,8 +6,6 @@ bs4==0.0.1
 certifi==2020.11.8
 cffi==1.14.4
 chardet==3.0.4
-discord==1.0.1
-discord.py==1.5.1
 fast-youtube-search==0.0.8
 idna==2.10
 multidict==4.7.6

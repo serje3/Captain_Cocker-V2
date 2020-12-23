@@ -1,4 +1,6 @@
 import asyncio
+import inspect
+
 from settings import DATABASE_TYPE
 import discord
 from discord.ext import commands
@@ -7,6 +9,8 @@ from fast_youtube_search import search_youtube
 from utils import change_role_bot, add_role_to_bot, parse_duration
 from dataQueries import ManageDB, ManagePostgreDB
 import youtube_dl
+
+
 
 ffmpeg_opts = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
@@ -134,8 +138,8 @@ class Music(commands.Cog):
     @spotify.before_invoke
     @golosovanie.before_invoke
     @play.before_invoke
-    @stop.before_invoke
-    async def ensure_voice(self,ctx):
+    # @stop.before_invoke
+    async def ensure_voice(ctx):
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
@@ -252,14 +256,27 @@ class SongList(commands.Cog):
     @next.before_invoke
     @playlist.before_invoke
     async def ensure_voice(self,ctx):
-        await self.ensure_voice(self,ctx)
+        await self.ensure_voice(ctx)
+
 
 
 class Main(commands.Bot):
     def __init__(self, command_prefix, token,intents):
         super().__init__(command_prefix=command_prefix, intents=intents)
         self.token = token
+        self.__method_list = []
+        self.__method_dict = {}
 
+
+    def __get_function_mapping(self):
+        if self.__method_list == []:
+            class_method_list = [cog.get_commands() for cog in self.cogs.values()]
+            for method_list in range(len(class_method_list)):
+                self.__method_list += class_method_list.pop(0)
+        if self.__method_dict == {}:
+            for method in self.__method_list:
+                self.__method_dict[method.name.lower()]=method
+        return self.__method_dict
 
     def insert_cogs(self, *cogs):
         for cog in cogs:
@@ -268,8 +285,43 @@ class Main(commands.Bot):
     async def on_ready(self):
         print('[Python][Discord]Logged on as', self.user)
         print('-------------')
+        # msg = await self.wait_for("INTERACTION_CREATE")
+        # print(msg)
 
 
+    async def on_interaction_create(self,member,channel,command):
+
+        async def ensure_voice(ctx):
+            if ctx.voice_client is None:
+                if member.voice:
+                    await member.voice.channel.connect()
+                else:
+                    await ctx.send("Вы не присоединены к голосовому чату.")
+                    raise commands.CommandError("Пользователь не присоединён к голосовому чату.")
+            elif ctx.voice_client.is_playing():
+                ctx.voice_client.stop()
+
+        print(command)
+        ctx = await self.get_context(await channel.fetch_message(channel.last_message_id))
+        method_map = self.__get_function_mapping()
+        command_name = command['name']
+
+        if command_name in ['play', 'playlist', 'spotify', 'next','golosovanie']:
+            await ensure_voice(ctx)
+
+        try:
+            options = command['options'][0]
+
+            if command_name=='join':
+                await method_map[command_name](ctx,channel=channel.guild.get_channel(int(options['value'])))
+            elif command_name=='play':
+                await method_map[command_name](ctx,url=options['value'])
+            elif command_name=='playlist':
+                await method_map[command_name](ctx,_id=options['value'])
+            else:
+                await method_map[command_name](ctx,options['value'])
+        except KeyError:
+            await method_map[command_name](ctx)
 
 
     async def on_guild_join(self, guild):
@@ -288,5 +340,4 @@ class Main(commands.Bot):
         await add_role_to_bot(guild, discord.utils.get(guild.roles, name='Музыка'))
 
     def run_bot(self):
-
         self.run(self.token)

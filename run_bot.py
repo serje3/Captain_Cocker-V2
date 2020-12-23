@@ -1,4 +1,7 @@
 import asyncio
+
+from discord_interactions import verify_key
+
 import settings
 import discord
 from discord.ext import commands
@@ -6,6 +9,14 @@ from app import Main, Music, SongList
 from dataQueries import ManageDB, ManagePostgreDB
 from aiohttp import web
 import json
+
+# import logging
+
+# logger = logging.getLogger('discord')
+# logger.setLevel(logging.DEBUG)
+# handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+# handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+# logger.addHandler(handler)
 
 intents = discord.Intents.all()
 
@@ -106,6 +117,12 @@ class VkBot(commands.Cog):
 
         async def command(request):
             try:
+                signature = request.headers["X-Signature-Ed25519"]
+                timestamp = request.headers["X-Signature-Timestamp"]
+                if verify_key(request.data, signature, timestamp, settings.PUBLIC_ID):
+                    print('Signature is valid')
+                else:
+                    print('Signature is invalid')
                 if (request.query['authkey'] == settings.AUTHKEY):
                     print(1, 'ok')
                     content = await request.json()
