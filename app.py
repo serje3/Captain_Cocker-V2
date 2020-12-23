@@ -1,6 +1,4 @@
 import asyncio
-import inspect
-
 from settings import DATABASE_TYPE
 import discord
 from discord.ext import commands
@@ -47,27 +45,31 @@ class Music(commands.Cog):
 
     @commands.command()
     async def play(self, ctx, *, url):
-        print(url)
         try:
             video = new(url,ydl_opts=ytdl_format_options)
         except ValueError:
             video_id = search_youtube(url.split(' '))[0]['id']
             video = new(video_id,ydl_opts=ytdl_format_options)
-
         async with ctx.typing():
             audio = video.getbestaudio().url
             ctx.voice_client.play(discord.FFmpegPCMAudio(audio, **ffmpeg_opts))
             ctx.voice_client.is_playing()
 
         player_title = video.title
-        await ctx.send('Сейчас играет: ' + player_title)
+        emd=discord.Embed(title=video.title,colour=0x36faff).set_author(name=video.author).set_footer(text=f"Продолжительность - {video.duration}").set_image(url=video.bigthumbhd)
+
+        await ctx.send(embed=emd)
         # change color and name
         await change_role_bot(player_title, self.bot, ctx, 'play')
         return player_title
 
     @commands.command()
-    async def spotify(self,ctx):
-        spotify_song = discord.utils.get(ctx.author.activities,name='Spotify')
+    async def spotify(self,ctx, member=None):
+        if member is not None:
+            spotify_song = discord.utils.get(member.activities,name='Spotify')
+        else:
+            spotify_song = discord.utils.get(ctx.author.activities,name='Spotify')
+
         if spotify_song is not None:
             await self.play(ctx=ctx,url=f"{spotify_song.title} - {spotify_song.artist}")
         else:
@@ -162,31 +164,15 @@ class SongList(commands.Cog):
     @commands.command()
     async def showList(self, ctx):
         List = self.database.select(ctx.guild.id)
-        msg = []
         result = []
         if List:
-
-            msg.append('id\tНазвание\n')
+            embed = discord.Embed(title="Список треков", description="Чтобы добавить в список - /add <название>",
+                                  color=0xff0000)
+            embed.set_author(name="Плейлист")
             for song in List:
-                msg.append(str(song[0]) + '   ' + song[1] + '\n')
-
-            lenList = [len(value) for value in msg]
-            result = msg
-            if sum(lenList) <= 2000:
-                await ctx.send("".join(msg))
-            else:
-
-                a = [value + sum(lenList[:i]) for value, i in [[lenList[i], i] for i in range(len(lenList))] if i != 0]
-                indexes = [0]
-                for i in range(len(a)):
-                    if a[i] - indexes[::-1][0] >= 2000:
-                        indexes.append(i)
-                for i in indexes:
-                    if i == 0:
-                        continue
-                    await ctx.send("".join(msg[:i]))
-                    del msg[:i]
-
+                embed.add_field(name=song[1], value=f"ID {song[0]}", inline=False)
+            embed.set_footer(text=f"Количество: {len(List)} треков")
+            await ctx.send(embed=embed)
         else:
             await ctx.send('Не найдено')
             result = ['Не найдено',]
@@ -194,7 +180,7 @@ class SongList(commands.Cog):
     @commands.command()
     async def playlist(self, ctx, _id=1):
         song_list = self.database.select(ctx.guild.id)
-        await ctx.send("Играет плейлист")
+        await ctx.send(embed=discord.Embed(title='Играет плейлист',colour=discord.Colour.red(),description=f"Плейлист из {len(song_list)} треков"))
         for id, song, guild in song_list:
             if id < _id:
                 continue
@@ -212,7 +198,7 @@ class SongList(commands.Cog):
                 ctx.voice_client.is_playing()
 
             await change_role_bot(video.title, self.bot, ctx, type='play', playlist=True, playlist_id=id)
-            await ctx.send(f"Плейлист ID {id} - {video.title}")
+            await ctx.send(embed=discord.Embed(title=video.title,description=f"Плейлист ID {id}",colour=discord.Colour.dark_red()).set_image(url=video.bigthumbhd))
             await asyncio.sleep(parse_duration(video.duration))
 
 
@@ -301,7 +287,6 @@ class Main(commands.Bot):
             elif ctx.voice_client.is_playing():
                 ctx.voice_client.stop()
 
-        print(command)
         ctx = await self.get_context(await channel.fetch_message(channel.last_message_id))
         method_map = self.__get_function_mapping()
         command_name = command['name']
@@ -321,7 +306,10 @@ class Main(commands.Bot):
             else:
                 await method_map[command_name](ctx,options['value'])
         except KeyError:
-            await method_map[command_name](ctx)
+            if command_name == 'spotify':
+                await method_map[command_name](ctx,member=member)
+            else:
+                await method_map[command_name](ctx)
 
 
     async def on_guild_join(self, guild):
