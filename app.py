@@ -164,15 +164,17 @@ class SongList(commands.Cog):
     @commands.command()
     async def showList(self, ctx):
         List = self.database.select(ctx.guild.id)
-        result = []
+        msg = []
         if List:
             embed = discord.Embed(title="Список треков", description="Чтобы добавить в список - /add <название>",
                                   color=0xff0000)
             embed.set_author(name="Плейлист")
             for song in List:
+                msg.append(f"{song[0]} - {song[1]}\n")
                 embed.add_field(name=song[1], value=f"ID {song[0]}", inline=False)
             embed.set_footer(text=f"Количество: {len(List)} треков")
             await ctx.send(embed=embed)
+            result = msg
         else:
             await ctx.send('Не найдено')
             result = ['Не найдено',]
