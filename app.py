@@ -198,7 +198,7 @@ class SongList(commands.Cog):
                 ctx.voice_client.is_playing()
 
             await change_role_bot(video.title, self.bot, ctx, type='play', playlist=True, playlist_id=id)
-            await ctx.send(embed=discord.Embed(title=video.title,description=f"Плейлист ID {id}",color=0x00ffbf).set_image(url=video.bigthumbhd))
+            await ctx.send(embed=discord.Embed(title=video.title,description=f"Плейлист ID {id}",color=0x00ffbf).set_image(url=video.bigthumbhd).set_author(name=video.author).set_footer(text=f"Продолжительность - {video.duration}"))
             await asyncio.sleep(parse_duration(video.duration))
 
 
