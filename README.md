@@ -1,5 +1,7 @@
 # Discord bot with vk integration  (beta)
-    Was used package - https://github.com/Rapptz/discord.py and rewritten for the new version of the Discord API
+Was used package - https://github.com/Rapptz/discord.py and rewritten for the new version of the Discord API
+    
+    
     git clone https://github.com/serje3/Captain_Cocker-V2/
 
 ## Windows  
