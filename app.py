@@ -60,7 +60,7 @@ class Music(commands.Cog):
 
         await ctx.send(embed=emd)
         # change color and name
-        await change_role_bot(player_title, self.bot, ctx, 'play')
+        # await change_role_bot(player_title, self.bot, ctx, 'play')
         return player_title
 
     @commands.command()
@@ -73,7 +73,7 @@ class Music(commands.Cog):
         if spotify_song is not None:
             await self.play(ctx=ctx,url=f"{spotify_song.title} - {spotify_song.artist}")
         else:
-            await ctx.send("Вы ничего не слушаете в Spotify\n(Или нет интерграции Discord с Spotify)")
+            await ctx.send("Вы ничего не слушаете в Spotify\n(Или нет интеграции Discord с Spotify)")
 
 
 
@@ -134,7 +134,7 @@ class Music(commands.Cog):
     @commands.command()
     async def stop(self, ctx):
         await ctx.voice_client.disconnect()
-        await change_role_bot('Музыка', self.bot, ctx, 'stop')
+        # await change_role_bot('Музыка', self.bot, ctx, 'stop')
 
     @staticmethod
     @spotify.before_invoke
@@ -199,12 +199,12 @@ class SongList(commands.Cog):
                 ctx.voice_client.play(discord.FFmpegPCMAudio(audio, **ffmpeg_opts))
                 ctx.voice_client.is_playing()
 
-            await change_role_bot(video.title, self.bot, ctx, type='play', playlist=True, playlist_id=id)
+            # await change_role_bot(video.title, self.bot, ctx, type='play', playlist=True, playlist_id=id)
             await ctx.send(embed=discord.Embed(title=video.title,description=f"Плейлист ID {id}",color=0x00ffbf).set_image(url=video.bigthumbhd).set_author(name=video.author).set_footer(text=f"Продолжительность - {video.duration}"))
             await asyncio.sleep(parse_duration(video.duration))
 
 
-        await change_role_bot('Музыка', self.bot, ctx, type='stop')
+        # await change_role_bot('Музыка', self.bot, ctx, type='stop')
 
     @commands.command()
     async def next(self,ctx):
