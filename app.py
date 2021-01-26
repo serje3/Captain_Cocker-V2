@@ -8,8 +8,6 @@ from utils import change_role_bot, add_role_to_bot, parse_duration
 from dataQueries import ManageDB, ManagePostgreDB
 import youtube_dl
 
-
-
 ffmpeg_opts = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn'}
@@ -42,40 +40,44 @@ class Music(commands.Cog):
 
         await channel.connect()
 
-
     @commands.command()
     async def play(self, ctx, *, url):
         try:
-            video = new(url,ydl_opts=ytdl_format_options)
+            video = new(url, ydl_opts=ytdl_format_options)
         except ValueError:
             video_id = search_youtube(url.split(' '))[0]['id']
-            video = new(video_id,ydl_opts=ytdl_format_options)
+            video = new(video_id, ydl_opts=ytdl_format_options)
+
         async with ctx.typing():
-            audio = video.getbestaudio().url
-            ctx.voice_client.play(discord.FFmpegPCMAudio(audio, **ffmpeg_opts))
-            ctx.voice_client.is_playing()
+            audio = video.getbestaudio()
+            filepath = video.videoid + '.' + audio.extension
+            audio.download(filepath=filepath, quiet=True)
+            await asyncio.sleep(0.5)
+            song = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filepath))
+
+            ctx.voice_client.play(song, after=lambda error: print('Ошибка с плеером: ' + error) if error else None)
 
         player_title = video.title
-        emd=discord.Embed(title=video.title,colour=0x36faff).set_author(name=video.author).set_footer(text=f"Продолжительность - {video.duration}").set_image(url=video.bigthumbhd)
+
+        emd = discord.Embed(title=video.title, colour=0x36faff).set_author(name=video.author).set_footer(
+            text=f"Продолжительность - {video.duration}").set_image(url=video.bigthumbhd)
 
         await ctx.send(embed=emd)
-        # change color and name
+        # change color and name (not working with 8 version of api)
         # await change_role_bot(player_title, self.bot, ctx, 'play')
         return player_title
 
     @commands.command()
-    async def spotify(self,ctx, member=None):
+    async def spotify(self, ctx, member=None):
         if member is not None:
-            spotify_song = discord.utils.get(member.activities,name='Spotify')
+            spotify_song = discord.utils.get(member.activities, name='Spotify')
         else:
-            spotify_song = discord.utils.get(ctx.author.activities,name='Spotify')
+            spotify_song = discord.utils.get(ctx.author.activities, name='Spotify')
 
         if spotify_song is not None:
-            await self.play(ctx=ctx,url=f"{spotify_song.title} - {spotify_song.artist}")
+            await self.play(ctx=ctx, url=f"{spotify_song.title} - {spotify_song.artist}")
         else:
             await ctx.send("Вы ничего не слушаете в Spotify\n(Или нет интеграции Discord с Spotify)")
-
-
 
     # @commands.Cog.listener(name='on_member_update')
     # async def update_member(self,before,after):
@@ -92,13 +94,10 @@ class Music(commands.Cog):
 
         await ctx.send("Громкость: {}%".format(volume))
 
-
-
-
     @commands.command()
     async def golosovanie(self, ctx):
-        await self.play(self,ctx, url="https://www.youtube.com/watch?v=dhhTNEJbEQ4")
-        time_code = [4,4.1,3.9,4,4,4,2.9,10.6,4,8,8,8,8,8,8]
+        await self.play(self, ctx, url="https://www.youtube.com/watch?v=dhhTNEJbEQ4")
+        time_code = [4, 4.1, 3.9, 4, 4, 4, 2.9, 10.6, 4, 8, 8, 8, 8, 8, 8]
         gif_urls = ["https://tenor.com/view/flick-esfand-esfandtv-ricardo-milos-ricardo-flick-gif-13730968",
                     "https://tenor.com/view/ponasenkov-%d0%bf%d0%be%d0%bd%d0%b0%d1%81%d0%b5%d0%bd%d0%ba%d0%be%d0%b2-%d1%82%d0%b0%d0%bd%d0%b5%d1%86-%d0%bc%d0%b0%d1%8d%d1%81%d1%82%d1%80%d0%be-dance-gif-15552318",
                     "https://tenor.com/view/gachi-gachimuchi-karate-gif-13510787",
@@ -177,17 +176,19 @@ class SongList(commands.Cog):
             result = msg
         else:
             await ctx.send('Не найдено')
-            result = ['Не найдено',]
+            result = ['Не найдено', ]
         return '\n'.join(result)
+
     @commands.command()
     async def playlist(self, ctx, _id=1):
         song_list = self.database.select(ctx.guild.id)
-        await ctx.send(embed=discord.Embed(title='Играет плейлист',color=0x94ffe4,description=f"Плейлист из {len(song_list)} треков"))
+        await ctx.send(embed=discord.Embed(title='Играет плейлист', color=0x94ffe4,
+                                           description=f"Плейлист из {len(song_list)} треков"))
         for id, song, guild in song_list:
             if id < _id:
                 continue
 
-            self.database.set_now_playing(id,guild)
+            self.database.set_now_playing(id, guild)
             try:
                 video_id = search_youtube(song.split(' '))[0]['id']
                 video = new(video_id)
@@ -195,20 +196,26 @@ class SongList(commands.Cog):
                 continue
 
             async with ctx.typing():
-                audio = video.getbestaudio().url
-                ctx.voice_client.play(discord.FFmpegPCMAudio(audio, **ffmpeg_opts))
-                ctx.voice_client.is_playing()
+                audio = video.getbestaudio()
+                filepath = video.videoid + '.' + audio.extension
+                audio.download(filepath=filepath,quiet=True)
+                await asyncio.sleep(0.5)
+                song = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filepath))
+
+                ctx.voice_client.play(song, after=lambda error: print('Ошибка с плеером: ' + error) if error else None)
 
             # await change_role_bot(video.title, self.bot, ctx, type='play', playlist=True, playlist_id=id)
-            await ctx.send(embed=discord.Embed(title=video.title,description=f"Плейлист ID {id}",color=0x00ffbf).set_image(url=video.bigthumbhd).set_author(name=video.author).set_footer(text=f"Продолжительность - {video.duration}"))
+            await ctx.send(
+                embed=discord.Embed(title=video.title, description=f"Плейлист ID {id}", color=0x00ffbf).set_image(
+                    url=video.bigthumbhd).set_author(name=video.author).set_footer(
+                    text=f"Продолжительность - {video.duration}"))
             await asyncio.sleep(parse_duration(video.duration))
-
 
         # await change_role_bot('Музыка', self.bot, ctx, type='stop')
 
     @commands.command()
-    async def next(self,ctx):
-       await self.playlist(ctx,self.database.get_now_playing(ctx.guild.id)[0][0] + 1)
+    async def next(self, ctx):
+        await self.playlist(ctx, self.database.get_now_playing(ctx.guild.id)[0][0] + 1)
 
     @commands.command()
     async def add(self, ctx, *songs):
@@ -243,18 +250,16 @@ class SongList(commands.Cog):
 
     @next.before_invoke
     @playlist.before_invoke
-    async def ensure_voice(self,ctx):
+    async def ensure_voice(self, ctx):
         await self.ensure_voice(ctx)
 
 
-
 class Main(commands.Bot):
-    def __init__(self, command_prefix, token,intents):
+    def __init__(self, command_prefix, token, intents):
         super().__init__(command_prefix=command_prefix, intents=intents)
         self.token = token
         self.__method_list = []
         self.__method_dict = {}
-
 
     def __get_function_mapping(self):
         if self.__method_list == []:
@@ -263,7 +268,7 @@ class Main(commands.Bot):
                 self.__method_list += class_method_list.pop(0)
         if self.__method_dict == {}:
             for method in self.__method_list:
-                self.__method_dict[method.name.lower()]=method
+                self.__method_dict[method.name.lower()] = method
         return self.__method_dict
 
     def insert_cogs(self, *cogs):
@@ -276,8 +281,7 @@ class Main(commands.Bot):
         # msg = await self.wait_for("INTERACTION_CREATE")
         # print(msg)
 
-
-    async def on_interaction_create(self,member,channel,command):
+    async def on_interaction_create(self, member, channel, command):
 
         async def ensure_voice(ctx):
             if ctx.voice_client is None:
@@ -293,26 +297,25 @@ class Main(commands.Bot):
         method_map = self.__get_function_mapping()
         command_name = command['name']
 
-        if command_name in ['play', 'playlist', 'spotify', 'next','golosovanie']:
+        if command_name in ['play', 'playlist', 'spotify', 'next', 'golosovanie']:
             await ensure_voice(ctx)
 
         try:
             options = command['options'][0]
 
-            if command_name=='join':
-                await method_map[command_name](ctx,channel=channel.guild.get_channel(int(options['value'])))
-            elif command_name=='play':
-                await method_map[command_name](ctx,url=options['value'])
-            elif command_name=='playlist':
-                await method_map[command_name](ctx,_id=options['value'])
+            if command_name == 'join':
+                await method_map[command_name](ctx, channel=channel.guild.get_channel(int(options['value'])))
+            elif command_name == 'play':
+                await method_map[command_name](ctx, url=options['value'])
+            elif command_name == 'playlist':
+                await method_map[command_name](ctx, _id=options['value'])
             else:
-                await method_map[command_name](ctx,options['value'])
+                await method_map[command_name](ctx, options['value'])
         except KeyError:
             if command_name == 'spotify':
-                await method_map[command_name](ctx,member=member)
+                await method_map[command_name](ctx, member=member)
             else:
                 await method_map[command_name](ctx)
-
 
     async def on_guild_join(self, guild):
         await guild.system_channel.send("Приветствую!\n Для информации напиши !info")
