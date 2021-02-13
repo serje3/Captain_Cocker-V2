@@ -3,7 +3,7 @@ import asyncio
 import settings
 import discord
 from discord.ext import commands
-from app import Main, Music, SongList
+from app import Main, Music, SongList, Queues
 from dataQueries import ManageDB, ManagePostgreDB
 from aiohttp import web
 import json
@@ -21,7 +21,7 @@ intents = discord.Intents.all()
 bot = Main("/", settings.TOKEN, intents)
 bot.insert_cogs(Music(bot))
 bot.insert_cogs(SongList(bot))
-
+bot.insert_cogs(Queues(bot))
 
 class VkBot(commands.Cog):
 
@@ -84,7 +84,6 @@ class VkBot(commands.Cog):
         elif command == 'next':
             await self.songlist.next(self, self.ctx)
         elif command == 'add':
-            print(args[1:])
             await self.songlist.add(self, self.ctx, *args[1:])
             return "Аудиозаписи добавлены в базу"
         elif command == 'drop':
@@ -117,9 +116,9 @@ class VkBot(commands.Cog):
             try:
 
                 if (request.query['authkey'] == settings.AUTHKEY):
-                    print(1, 'ok')
+
                     content = await request.json()
-                    print(content)
+
                     msg = ""
                     if (content['command'][0] in self.command_list):
                         msg = await self.execute_command(content['command'])
@@ -152,5 +151,7 @@ vkbot = VkBot(bot)
 bot.insert_cogs(vkbot)
 
 bot.loop.create_task(vkbot.webserver())
+
+
 
 bot.run_bot()

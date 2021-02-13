@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from pafy import new
 from fast_youtube_search import search_youtube
-from utils import change_role_bot, add_role_to_bot, parse_duration
+from utils import change_role_bot, add_role_to_bot, parse_duration, VoiceState
 from dataQueries import ManageDB, ManagePostgreDB
 import youtube_dl
 
@@ -27,6 +27,37 @@ ytdl_format_options = {
 }
 
 
+async def get_audio(ctx, url):
+    try:
+        video = new(url, ydl_opts=ytdl_format_options)
+    except ValueError:
+        video_id = search_youtube(url.split(' '))[0]['id']
+        video = new(video_id, ydl_opts=ytdl_format_options)
+
+    async with ctx.typing():
+        audio = video.getbestaudio()
+        filepath = video.videoid + '.' + audio.extension
+        audio.download(filepath=filepath, quiet=True)
+        await asyncio.sleep(0.5)
+        song = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filepath))
+
+    return video, song
+
+
+class VoiceEntry:
+    def __init__(self, ctx, song, video):
+        self.ctx = ctx
+        self.requester = ctx.author
+        self.channel = ctx.voice_client
+        self.song = song
+        self.video = video
+
+    def get_emd(self):
+        emd = discord.Embed(title=self.video.title, colour=0x36faff).set_author(name=self.video.author).set_footer(
+            text=f"Продолжительность - {self.video.duration}").set_image(url=self.video.bigthumbhd)
+        return emd
+
+
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -42,20 +73,10 @@ class Music(commands.Cog):
 
     @commands.command()
     async def play(self, ctx, *, url):
-        try:
-            video = new(url, ydl_opts=ytdl_format_options)
-        except ValueError:
-            video_id = search_youtube(url.split(' '))[0]['id']
-            video = new(video_id, ydl_opts=ytdl_format_options)
 
-        async with ctx.typing():
-            audio = video.getbestaudio()
-            filepath = video.videoid + '.' + audio.extension
-            audio.download(filepath=filepath, quiet=True)
-            await asyncio.sleep(0.5)
-            song = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filepath))
+        video, song = await get_audio(ctx, url)
 
-            ctx.voice_client.play(song, after=lambda error: print('Ошибка с плеером: ' + error) if error else None)
+        ctx.voice_client.play(song, after=lambda error: print('Ошибка с плеером: ' + error) if error else None)
 
         player_title = video.title
 
@@ -78,10 +99,6 @@ class Music(commands.Cog):
             await self.play(ctx=ctx, url=f"{spotify_song.title} - {spotify_song.artist}")
         else:
             await ctx.send("Вы ничего не слушаете в Spotify\n(Или нет интеграции Discord с Spotify)")
-
-    # @commands.Cog.listener(name='on_member_update')
-    # async def update_member(self,before,after):
-    #     print('yes')
 
     @commands.command()
     async def volume(self, ctx, volume: int):
@@ -130,9 +147,7 @@ class Music(commands.Cog):
 
         await ctx.send("Громкость: {}%".format(volume))
 
-    @commands.command()
-    async def stop(self, ctx):
-        await ctx.voice_client.disconnect()
+
         # await change_role_bot('Музыка', self.bot, ctx, 'stop')
 
     @staticmethod
@@ -145,16 +160,93 @@ class Music(commands.Cog):
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
-                await ctx.send("Вы не присоединены к голосовому чату.")
+                await ctx.author.send("Вы не присоединены к голосовому чату.")
                 raise commands.CommandError("Пользователь не присоединён к голосовому чату.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
 
 
+class Queues(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.voice_states = {}
+
+    def get_voice_state(self, guild):
+        state = self.voice_states.get(guild.id)
+        if state is None:
+            state = VoiceState(self.bot)
+            self.voice_states[guild.id] = state
+
+        return state
+
+    async def create_voice_client(self, channel):
+        voice = await channel.connect()
+        state = self.get_voice_state(channel.guild)
+        state.voice = voice
+
+    def __unload(self):
+        for state in self.voice_states.values():
+            try:
+                state.audio_player.cancel()
+                if state.voice:
+                    self.bot.loop.create_task(state.voice.disconnect())
+            except:
+                pass
+
+    @commands.command()
+    async def summon(self, ctx):
+
+        summoned_channel = ctx.author.voice
+        if summoned_channel is None:
+            await ctx.author.send("Команда не выполнена, вы не подключены к голосовому чату")
+            return False
+
+        state = self.get_voice_state(ctx.guild)
+        if state.voice is None:
+            state.voice = await summoned_channel.channel.connect()
+        else:
+            try:
+                await state.voice.move_to(summoned_channel)
+            except discord.ClientException:
+                pass
+
+        return True
+
+    @commands.command()
+    async def queue(self, ctx, *, url):
+        state = self.get_voice_state(ctx.guild)
+
+        if state.voice is None:
+            success = await ctx.invoke(self.summon)
+            if not success:
+                return
+
+        video, song = await get_audio(ctx, url)
+        entry = VoiceEntry(ctx, song, video)
+        await ctx.send('Добавлено в очередь ' + video.title)
+        await state.songs.put(entry)
+
+    @commands.command()
+    async def skip(self,ctx):
+        state = self.get_voice_state(ctx.guild)
+        await state.skip()
+
+    @commands.command()
+    async def stop(self, ctx):
+
+        state = self.get_voice_state(ctx.guild)
+        while not state.songs.empty():
+            state.songs.get_nowait()
+
+        await ctx.voice_client.disconnect()
+
+
+
+
 class SongList(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        if (DATABASE_TYPE):
+        if DATABASE_TYPE:
             self.database = ManagePostgreDB()
         else:
             self.database = ManageDB()
@@ -191,27 +283,18 @@ class SongList(commands.Cog):
             self.database.set_now_playing(id, guild)
             try:
                 video_id = search_youtube(song.split(' '))[0]['id']
-                video = new(video_id)
             except:
                 continue
 
-            async with ctx.typing():
-                audio = video.getbestaudio()
-                filepath = video.videoid + '.' + audio.extension
-                audio.download(filepath=filepath,quiet=True)
-                await asyncio.sleep(0.5)
-                song = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filepath))
+            video, song = await get_audio(ctx, video_id)
 
-                ctx.voice_client.play(song, after=lambda error: print('Ошибка с плеером: ' + error) if error else None)
+            ctx.voice_client.play(song, after=lambda error: print('Ошибка с плеером: ' + error) if error else None)
 
-            # await change_role_bot(video.title, self.bot, ctx, type='play', playlist=True, playlist_id=id)
             await ctx.send(
                 embed=discord.Embed(title=video.title, description=f"Плейлист ID {id}", color=0x00ffbf).set_image(
                     url=video.bigthumbhd).set_author(name=video.author).set_footer(
                     text=f"Продолжительность - {video.duration}"))
             await asyncio.sleep(parse_duration(video.duration))
-
-        # await change_role_bot('Музыка', self.bot, ctx, type='stop')
 
     @commands.command()
     async def next(self, ctx):
@@ -232,9 +315,15 @@ class SongList(commands.Cog):
         if text != "":
             songsList.append(text.replace(',', ''))
         list = [(song, guild) for song in songsList]
-        print(list)
+
         self.database.insert(list)
         await ctx.send(f"Сохранены: {', '.join(songsList)}"[:2000])
+
+    # @commands.command()
+    # async def test(self,ctx):
+    #     print('ctx',ctx)
+    #     print('voice_client',ctx.voice_client) # голосовой канал бота
+    #     print('author-voice-channel',ctx.author.voice) # голосовой канал пользователя
 
     @commands.command()
     async def drop(self, ctx, *_id):
@@ -254,6 +343,22 @@ class SongList(commands.Cog):
         await self.ensure_voice(ctx)
 
 
+async def on_guild_join(guild):
+    await guild.system_channel.send("Приветствую!\n Для информации напиши !info")
+    await guild.system_channel.send("https://tenor.com/bhyep.gif")
+
+    if discord.utils.get(guild.roles, name='Музыка') is None:
+        await guild.create_role(
+            name='Музыка',
+            permissions=discord.Permissions().all(),
+            colour=discord.Colour(0x3a989b),
+            mentionable=True,
+            reason="Нужна для отображения статуса бота"
+        )
+
+    await add_role_to_bot(guild, discord.utils.get(guild.roles, name='Музыка'))
+
+
 class Main(commands.Bot):
     def __init__(self, command_prefix, token, intents):
         super().__init__(command_prefix=command_prefix, intents=intents)
@@ -262,7 +367,7 @@ class Main(commands.Bot):
         self.__method_dict = {}
 
     def __get_function_mapping(self):
-        if self.__method_list == []:
+        if not self.__method_list:
             class_method_list = [cog.get_commands() for cog in self.cogs.values()]
             for method_list in range(len(class_method_list)):
                 self.__method_list += class_method_list.pop(0)
@@ -305,7 +410,7 @@ class Main(commands.Bot):
 
             if command_name == 'join':
                 await method_map[command_name](ctx, channel=channel.guild.get_channel(int(options['value'])))
-            elif command_name == 'play':
+            elif command_name == 'play' or command_name == 'queue':
                 await method_map[command_name](ctx, url=options['value'])
             elif command_name == 'playlist':
                 await method_map[command_name](ctx, _id=options['value'])
@@ -316,21 +421,6 @@ class Main(commands.Bot):
                 await method_map[command_name](ctx, member=member)
             else:
                 await method_map[command_name](ctx)
-
-    async def on_guild_join(self, guild):
-        await guild.system_channel.send("Приветствую!\n Для информации напиши !info")
-        await guild.system_channel.send("https://tenor.com/bhyep.gif")
-
-        if discord.utils.get(guild.roles, name='Музыка') == None:
-            await guild.create_role(
-                name='Музыка',
-                permissions=discord.Permissions().all(),
-                colour=discord.Colour(0x3a989b),
-                mentionable=True,
-                reason="Нужна для отображения статуса бота"
-            )
-
-        await add_role_to_bot(guild, discord.utils.get(guild.roles, name='Музыка'))
 
     def run_bot(self):
         self.run(self.token)
