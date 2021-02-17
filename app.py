@@ -160,7 +160,7 @@ class Music(commands.Cog):
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
-                await ctx.author.send("Вы не присоединены к голосовому чату.")
+                await ctx.send("Вы не присоединены к голосовому чату.")
                 raise commands.CommandError("Пользователь не присоединён к голосовому чату.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
@@ -198,17 +198,14 @@ class Queues(commands.Cog):
 
         summoned_channel = ctx.author.voice
         if summoned_channel is None:
-            await ctx.author.send("Команда не выполнена, вы не подключены к голосовому чату")
+            await ctx.send("Команда не выполнена, вы не подключены к голосовому чату")
             return False
 
         state = self.get_voice_state(ctx.guild)
         if state.voice is None:
             state.voice = await summoned_channel.channel.connect()
         else:
-            try:
-                await state.voice.move_to(summoned_channel)
-            except discord.ClientException:
-                pass
+            await state.voice.move_to(summoned_channel)
 
         return True
 

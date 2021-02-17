@@ -92,8 +92,9 @@ class VoiceState:
         while True:
             self.play_next_song.clear()
             self.current = await self.songs.get()
-            emd = self.current.get_emd()
-            await self.current.ctx.send(embed=emd)
-            self.current.ctx.voice_client.play(self.current.song,after=self.toggle_next)
+            if not self.current.ctx.voice_client is None:
+                emd = self.current.get_emd()
+                await self.current.ctx.send(embed=emd)
+                self.current.ctx.voice_client.play(self.current.song,after=self.toggle_next)
             await self.play_next_song.wait()
 
